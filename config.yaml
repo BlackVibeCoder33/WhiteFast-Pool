@@ -1,0 +1,182 @@
+# ============================================================
+# WhiteFast-Pool — конфиг
+# ============================================================
+
+# auto  — автоопределение (GET на источник из subscriptions):
+#         black = HTTP OK → fetch=auto, speed_test.mode=black, geoip=true
+#         white = HTTP fail (DPI на SNI) → fetch=cache_first,
+#                 speed_test.mode=white, geoip.enabled=false
+# black / white — принудительно.
+environment: "auto"
+
+subscriptions:
+  - name: "solovyov-final-sorted"
+    url: "https://raw.githubusercontent.com/solovyov-jenya2004/all_subs/main/final_sorted"
+    enabled: true
+  - name: "ermaozi-getv2ray"
+    url: "https://raw.githubusercontent.com/ermaozi/get_subscribe/main/subscribe/v2ray.txt"
+    enabled: true
+  - name: "ts-sf-fly"
+    url: "https://raw.githubusercontent.com/ts-sf/fly/main/v2"
+    enabled: true
+  - name: "kizyak-beta6"
+    url: "https://raw.githubusercontent.com/Maskkost93/kizyak-vpn-4.0/main/kizyakbeta6.txt"
+    enabled: true
+  - name: "kizyak-beta7"
+    url: "https://raw.githubusercontent.com/Maskkost93/kizyak-vpn-4.0/main/kizyakbeta7.txt"
+    enabled: true
+  - name: "kizyak-beta8"
+    url: "https://raw.githubusercontent.com/Maskkost93/kizyak-vpn-4.0/main/kizyakbeta8.txt"
+    enabled: true
+
+# Источники, которые auto_disable_sources.py не отключает и не удаляет.
+verified_sources:
+  - "solovyov-final-sorted"
+  - "ermaozi-getv2ray"
+  - "ts-sf-fly"
+  - "kizyak-beta6"
+  - "kizyak-beta7"
+  - "kizyak-beta8"
+
+thresholds:
+  max_ping_ms: 500
+  min_speed_mbps: 5
+  max_service_latency_ms: 10000
+
+thresholds_by_type:
+  hysteria2:
+    max_service_latency_ms: 10000
+
+anti_dpi:
+  enabled: true
+  fragment: true
+  fragment_fallback_delay: "500ms"
+  record_fragment: true
+
+# 6 профилей: TG+YT и Any, в 4 вариантах:
+#   * (без суффикса) — route.final="direct", Hiddify строит маршрутизацию.
+#   * "Proxy" — route.final="proxy-auto" (full-tunnel), весь трафик через
+#     прокси. Работает без настройки Hiddify UI.
+#   * "(RF)" — allow_russian=true.
+subscription_profiles:
+  - name: "WhiteFast TG+YT"
+    path: "white-tg-yt"
+    filename: "WhiteFast-TG-YT.json"
+    group_prefix: "WhiteFast TG+YT"
+    required_services: ["telegram", "youtube"]
+    min_speed_mbps: 0
+
+  - name: "WhiteFast TG+YT Proxy"
+    path: "white-tg-yt-proxy"
+    filename: "WhiteFast-TG-YT-Proxy.json"
+    group_prefix: "WhiteFast TG+YT (Proxy)"
+    required_services: ["telegram", "youtube"]
+    min_speed_mbps: 0
+    route_final: "proxy"
+
+  - name: "WhiteFast TG+YT (RF)"
+    path: "white-tg-yt-rf"
+    filename: "WhiteFast-TG-YT-RF.json"
+    group_prefix: "WhiteFast TG+YT (RF)"
+    required_services: ["telegram", "youtube"]
+    min_speed_mbps: 0
+    allow_russian: true
+
+  - name: "WhiteFast TG+YT (RF) Proxy"
+    path: "white-tg-yt-rf-proxy"
+    filename: "WhiteFast-TG-YT-RF-Proxy.json"
+    group_prefix: "WhiteFast TG+YT (RF, Proxy)"
+    required_services: ["telegram", "youtube"]
+    min_speed_mbps: 0
+    allow_russian: true
+    route_final: "proxy"
+
+  - name: "WhiteFast Any"
+    path: "white-any"
+    filename: "WhiteFast-Any.json"
+    group_prefix: "WhiteFast Any"
+    required_services: []
+    min_speed_mbps: 0
+    allow_russian: true
+
+  - name: "WhiteFast Any Proxy"
+    path: "white-any-proxy"
+    filename: "WhiteFast-Any-Proxy.json"
+    group_prefix: "WhiteFast Any (Proxy)"
+    required_services: []
+    min_speed_mbps: 0
+    allow_russian: true
+    route_final: "proxy"
+
+udp_types:
+  - hysteria2
+
+# Только telegram и youtube — нужны для профилей white-tg-yt*.
+# Остальные (instagram, chatgpt, flashscore, drom, google, yandex, mail_ru)
+# удалены для ускорения service-check.
+services:
+  youtube:
+    url: "https://www.youtube.com/generate_204"
+    expect_status: 204
+    timeout_seconds: 10
+  telegram:
+    url: "https://web.telegram.org/"
+    expect_status: 200
+    timeout_seconds: 10
+
+schedule:
+  update_interval_minutes: 60
+
+http_server:
+  host: "0.0.0.0"
+  port: 8080
+
+tcp_check:
+  concurrent: 300
+  timeout_seconds: 4
+
+service_check:
+  concurrent_pc: 6
+  concurrent_github: 25
+  retry_on_connect_error: true
+
+speed_test:
+  # black — test_urls (youtube/yandex первыми, потом dl.google/CF/OVH).
+  # white — whitelist_test_urls (youtube/yandex/tinkoff — отдают трафик
+  #         с whitelisted SNI).
+  mode: "black"
+  concurrent_pc: 6
+  concurrent_github: 25
+  test_urls:
+    - "https://www.youtube.com/"
+    - "https://yandex.ru/internet/"
+    - "https://dl.google.com/dl/android/studio/install/3.5.2.0/android-studio-ide-191.5977832-windows.exe"
+    - "https://speed.cloudflare.com/__down?bytes=10000000"
+    - "https://proof.ovh.net/files/10Mb.dat"
+  whitelist_test_urls:
+    - "https://www.youtube.com/"
+    - "https://yandex.ru/internet/"
+    - "https://speedtest.tinkoff.ru/"
+  timeout_seconds: 60
+  retest_count: 3
+  retest_pause_seconds: 1
+  min_measure_bytes: 5000000
+  min_measure_bytes_whitelist: 30000
+  peak_window_seconds: 0.5
+
+cache:
+  enabled: true
+  ban_after_consecutive_failures: 3
+  ban_duration_hours: 2
+  cache_file: "out/cache.json"
+
+fetch:
+  mode: "auto"
+
+geoip:
+  enabled: true
+
+paths:
+  out_subscription: "out/subscription.json"
+  out_results: "out/results.json"
+  log_file: "logs/app.log"

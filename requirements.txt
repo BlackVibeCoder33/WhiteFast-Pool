@@ -1,0 +1,4 @@
+aiohttp>=3.9
+PyYAML>=6.0
+apscheduler>=3.10
+loguru>=0.7
