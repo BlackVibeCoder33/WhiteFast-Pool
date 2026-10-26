@@ -1,1 +1,46 @@
+name: WhiteFast Pool Update
 
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Download sing-box
+        run: |
+          mkdir -p bin
+          wget -q https://github.com/SagerNet/sing-box/releases/latest/download/sing-box-linux-amd64.tar.gz -O /tmp/sing-box.tar.gz
+          tar -xzf /tmp/sing-box.tar.gz -C /tmp
+          cp /tmp/sing-box-*/sing-box bin/sing-box
+          chmod +x bin/sing-box
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: out/cache.json
+          key: whitefast-cache-${{ github.run_id }}
+          restore-keys: whitefast-cache-
+
+      - name: Run pipeline
+        env:
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+          GIST_ID: ${{ secrets.GIST_ID }}
+        run: python run_once.py
+
+      - name: Update Gist
+        env:
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+          GIST_ID: ${{ secrets.GIST_ID }}
+        run: python update_gist.py
