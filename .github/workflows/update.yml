@@ -49,8 +49,8 @@ jobs:
           # Создаем папку subs, если её нет
           mkdir -p subs
           
-          # Копируем все сгенерированные JSON-файлы туда
-          cp out/WhiteFast-*.json subs/ || true
+          # Копируем TXT-файлы (URI-списки) для Hiddify
+          cp out/WhiteFast-*.txt subs/ || true
           
           # Настраиваем Git
           git config --global user.name "github-actions[bot]"
@@ -58,7 +58,7 @@ jobs:
           
           # Коммитим изменения
           git add subs/
-          git commit -m "Auto-update subscriptions" || echo "No changes to commit"
+          git commit -m "Auto-update subscriptions (txt)" || echo "No changes to commit"
           
           # Пушим в репозиторий
           git push
