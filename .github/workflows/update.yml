@@ -2,8 +2,13 @@ name: WhiteFast Pool Update
 
 on:
   schedule:
+    # Запуск каждый час в 17 минут (UTC).
     - cron: "17 * * * *"
-  workflow_dispatch:
+  workflow_dispatch:   # ручной запуск из вкладки Actions
+
+# Даем боту права на запись, чтобы он мог делать git push в папку subs/
+permissions:
+  contents: write
 
 jobs:
   update:
@@ -21,7 +26,6 @@ jobs:
       - name: Download sing-box
         run: |
           mkdir -p bin
-          # Получаем URL последнего релиза через GitHub API
           LATEST_URL=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest \
             | jq -r '.assets[] | select(.name | test("linux-amd64.tar.gz$")) | .browser_download_url')
           echo "Downloading: $LATEST_URL"
@@ -38,9 +42,6 @@ jobs:
           restore-keys: whitefast-cache-
 
       - name: Run pipeline
-        env:
-          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
-          GIST_ID: ${{ secrets.GIST_ID }}
         run: python run_once.py
 
       - name: Save and commit subscriptions
@@ -60,4 +61,4 @@ jobs:
           git commit -m "Auto-update subscriptions" || echo "No changes to commit"
           
           # Пушим в репозиторий
-          git push        
+          git push
