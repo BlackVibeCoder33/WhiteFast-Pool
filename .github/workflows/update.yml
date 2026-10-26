@@ -21,7 +21,11 @@ jobs:
       - name: Download sing-box
         run: |
           mkdir -p bin
-          wget -q https://github.com/SagerNet/sing-box/releases/latest/download/sing-box-linux-amd64.tar.gz -O /tmp/sing-box.tar.gz
+          # Получаем URL последнего релиза через GitHub API
+          LATEST_URL=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest \
+            | jq -r '.assets[] | select(.name | test("linux-amd64.tar.gz$")) | .browser_download_url')
+          echo "Downloading: $LATEST_URL"
+          curl -L -o /tmp/sing-box.tar.gz "$LATEST_URL"
           tar -xzf /tmp/sing-box.tar.gz -C /tmp
           cp /tmp/sing-box-*/sing-box bin/sing-box
           chmod +x bin/sing-box
