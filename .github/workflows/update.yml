@@ -42,3 +42,22 @@ jobs:
           GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
           GIST_ID: ${{ secrets.GIST_ID }}
         run: python run_once.py
+
+      - name: Save and commit subscriptions
+        run: |
+          # Создаем папку subs, если её нет
+          mkdir -p subs
+          
+          # Копируем все сгенерированные JSON-файлы туда
+          cp out/WhiteFast-*.json subs/ || true
+          
+          # Настраиваем Git
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Коммитим изменения
+          git add subs/
+          git commit -m "Auto-update subscriptions" || echo "No changes to commit"
+          
+          # Пушим в репозиторий
+          git push        
